@@ -1,5 +1,4 @@
 import SuperHR from '../modals/superHrModal.js';
-import Company from '../../CompanyHR/modals/companyModel.js'; 
 
 export const assignSuperHRToCompany = async (req, res) => {
     const { companyId, superHRId } = req.body;
