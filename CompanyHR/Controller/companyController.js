@@ -1,57 +1,65 @@
 import bcrypt from 'bcryptjs';
-import Company from '../modals/companyModel.js';
 import { sendEmail } from '../../emailService.js';
 import { verifyOtp } from '../../otpService.js';
-import TemporaryCompany from '../modals/temporaryCompany.js';
+import TemporaryUser from '../../userModal/temporaryUserModal.js';
+import User from '../../userModal/modal.js';
 
 export const sendOtp = async (req, res) => {
-  const { email } = req.body;
+    const { email, userType } = req.body;
+    console.log(req.body); 
 
-  try {
-      const existingCompany = await TemporaryCompany.findOne({ email });
-      if (existingCompany) {
-          return res.status(400).json({ message: 'OTP sent. Please check your email.' });
+  
+    try {
+      const existingUser = await TemporaryUser.findOne({ email });
+      if (existingUser) {
+          return res.status(400).json({ message: 'OTP already sent. Please check your email.' });
       }
-
+  
       const otp = Math.floor(100000 + Math.random() * 900000);
       const otpExpiry = Date.now() + 15 * 60 * 1000;
-
-      await new TemporaryCompany({ email, otp, otpExpiry }).save();
-
+  
+      // Save temporary user 
+      await new TemporaryUser({ email, otp, otpExpiry, userType }).save();
+  
       const subject = 'Requested OTP';
-      const message = `Hello your Otp for verification is ${otp}`;
-
+      const message = `Hello, your OTP for verification is ${otp}`;
+  
       await sendEmail(email, subject, message);
-
+  
       res.status(201).json({ message: 'OTP sent to your email. Please verify to complete signup.' });
-  } catch (error) {
+    } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Server error' });
-  }
-};
+    }
+  };  
 
+// Create a new account after OTP verification
 export const createAccount = async (req, res) => {
-  const { email, otp, password } = req.body; 
-
+  const { email, otp, password, userType } = req.body;
+    console.log(req.body);
   try {
-      const { isValid, type } = await verifyOtp(email, otp);
+      const { isValid } = await verifyOtp(email, otp);
 
-      if (!isValid || type !== 'company') {
+      if (!isValid) {
           return res.status(400).json({ message: 'Invalid or expired OTP' });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const newCompany = new Company({
+      // Create a new user 
+      const newUser = new User({
           email,
           password: hashedPassword,
-          userType: 'company',
+          userType: userType ,
+          isVerified: true,  
       });
-      await newCompany.save();
 
-      await TemporaryCompany.deleteOne({ email });
+      await newUser.save();
 
-      res.status(201).json({ message: 'Company registered successfully' });
+      // Remove temporary user data 
+      await TemporaryUser.deleteOne({ email });
+
+      res.status(201).json({ message: `${userType} registered successfully` });
   } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Server error' });

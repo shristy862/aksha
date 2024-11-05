@@ -1,48 +1,40 @@
 import bcrypt from 'bcryptjs';
-import Candidate from '../modals/candidateModal.js';
-import TemporaryCandidate from '../modals/temporaryM.js';
+import TemporaryUser from '../../userModal/temporaryUserModal.js'; 
+import User from '../../userModal/modal.js'; 
 import { sendEmail } from '../../emailService.js';
 import { verifyOtp } from '../../otpService.js';
 
 export const sendOtp = async (req, res) => {
-    const { email } = req.body;
-
+    const { email, userType } = req.body; // Extract userType from the request body
+    console.log(req.body);
     try {
-        console.log('Received email:', email);
-
-        // Check if the candidate already exists 
-        const existingCandidate = await Candidate.findOne({ email });
-        if (existingCandidate) {
+        // Check if the temporary user already exists
+        const existingTempUser = await TemporaryUser.findOne({ email });
+        if (existingTempUser) {
             return res.status(400).json({ message: 'User already exists. Please login.' });
         }
 
         // Generate OTP and expiry time
-        const otp = Math.floor(100000 + Math.random() * 900000);
-        const otpExpiry = Date.now() + 15 * 60 * 1000;
+        const otp = Math.floor(100000 + Math.random() * 900000); // Generate a 6-digit OTP
+        const otpExpiry = Date.now() + 15 * 60 * 1000; // Set expiry for 15 minutes
         console.log('Generated OTP:', otp);
         console.log('OTP Expiration Time:', new Date(otpExpiry).toISOString());
 
-        
-        let temporaryCandidate = await TemporaryCandidate.findOne({ email });
+        // Create a new temporary user with the required fields
+        const temporaryUser = new TemporaryUser({
+            email,
+            otp,
+            otpExpiry,
+            userType // Include userType here
+        });
 
-        if (temporaryCandidate) {
-            // Update the existing 
-            temporaryCandidate.otp = otp;
-            temporaryCandidate.otpExpiry = otpExpiry;
-            await temporaryCandidate.save();
-            console.log('Updated OTP for existing temporary candidate:', temporaryCandidate);
-        } else {
-            // Create a new record 
-            temporaryCandidate = await new TemporaryCandidate({ email, otp, otpExpiry }).save();
-            console.log('Temporary candidate saved:', temporaryCandidate);
-        }
+        await temporaryUser.save(); // Save the temporary user
+        console.log('Temporary user saved:', temporaryUser);
 
-        // Send OTP 
-        // await sendEmail(email, otp);
+        // Send OTP to the user's email
         const subject = 'Requested OTP';
-      const message = `Hello your Otp for verification is ${otp}`;
-
-      await sendEmail(email, subject, message);
+        const message = `Hello, your OTP for verification is ${otp}`;
+        await sendEmail(email, subject, message);
 
         res.status(201).json({ message: 'OTP sent to your email. Please verify to complete signup.' });
     } catch (error) {
@@ -50,14 +42,12 @@ export const sendOtp = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
-
-
 export const createAccount = async (req, res) => {
-    const { email, otp, password, } = req.body;
+    const { email, otp, password, userType } = req.body; 
     console.log('Received request for signup', req.body);
     try {
-        // Use the verifyOtp function to validate the OTP
-        const { isValid, tempRecord } = await verifyOtp(email, otp);
+        // Use the verifyOtp function 
+        const { isValid } = await verifyOtp(email, otp);
 
         if (!isValid) {
             return res.status(400).json({ message: 'Invalid or expired OTP' });
@@ -65,17 +55,18 @@ export const createAccount = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const newCandidate = new Candidate({
+        // Create a new user
+        const newUser = new User({
             email,
             password: hashedPassword,
             isVerified: true,
-            userType: 'candidate',
+            userType: userType, // Store the userType from the request
         });
 
-        await newCandidate.save();
+        await newUser.save();
 
         // Remove temporary record 
-        await TemporaryCandidate.deleteOne({ email });
+        await TemporaryUser.deleteOne({ email });
 
         res.status(201).json({ message: 'Account created successfully!' });
 

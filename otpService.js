@@ -1,26 +1,22 @@
-import TemporaryCandidate from './Candidate/modals/temporaryM.js';
-import TemporaryCompany from './CompanyHR/modals/temporaryCompany.js'; 
+import TemporaryUser from './userModal/temporaryUserModal.js';
 
-export const verifyOtp = async (email, otp, expiryTime) => {
-  const tempCandidate = await TemporaryCandidate.findOne({ email });
-  const tempCompany = await TemporaryCompany.findOne({ email });
+export const verifyOtp = async (email, otp) => {
+  try {
+    const tempUserRecord = await TemporaryUser.findOne({ email });
 
-  // Check for OTP verification for both Candidate and Company
-  if (tempCandidate) {
-    return {
-      isValid: tempCandidate.otp === parseInt(otp) && tempCandidate.otpExpiry >= Date.now(),
-      tempRecord: tempCandidate,
-      type: 'candidate',
-    };
+    if (tempUserRecord) {
+      const isOtpValid = tempUserRecord.otp === parseInt(otp) && tempUserRecord.otpExpiry >= Date.now();
+      
+      return {
+        isValid: isOtpValid,
+        tempRecord: tempUserRecord,
+        type: tempUserRecord.userType,  // Return the userType from the enum
+      };
+    }
+
+    return { isValid: false, type: null };
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    return { isValid: false, type: null };
   }
-
-  if (tempCompany) {
-    return {
-      isValid: tempCompany.otp === parseInt(otp) && tempCompany.otpExpiry >= Date.now(),
-      tempRecord: tempCompany,
-      type: 'company',
-    };
-  }
-
-  return { isValid: false, type: null };
 };

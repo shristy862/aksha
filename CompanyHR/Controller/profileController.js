@@ -1,4 +1,4 @@
-import Company from '../modals/companyModel.js';
+// import Company from '../modals/companyModel.js';
 
 export const completeCompanyProfile = async (req, res) => {
     const { 

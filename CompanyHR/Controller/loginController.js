@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import Company from '../modals/companyModel.js';  
+// import Company from '../modals/companyModel.js';  
 import jwt from 'jsonwebtoken';
 
 export const loginCompany = async (req, res) => {
