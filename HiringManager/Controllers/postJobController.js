@@ -2,8 +2,8 @@ import Job from '../modals/jobModal.js';
 
 export const postJob = async (req, res) => {
     const { title, description, location, requirements } = req.body;
-    const { companyId } = req.params; // Assuming companyId is passed in the URL
-    const hiringManagerId = req.user.id; // Get the hiring manager ID from the token
+    const { companyId } = req.params; 
+    const hiringManagerId = req.user.id;
 
     try {
         const job = new Job({

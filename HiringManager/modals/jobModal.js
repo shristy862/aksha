@@ -11,12 +11,12 @@ const jobSchema = new mongoose.Schema({
     },
     companyId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Company', // Assuming you have a Company model
+        ref: 'Company', 
         required: true,
     },
     hiringManagerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'HiringManager', // Assuming you have a HiringManager model
+        ref: 'HiringManager', 
         required: true,
     },
     location: {
@@ -24,7 +24,7 @@ const jobSchema = new mongoose.Schema({
         required: true,
     },
     requirements: {
-        type: [String], // Array of strings for job requirements
+        type: [String], 
     },
     createdAt: {
         type: Date,

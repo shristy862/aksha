@@ -17,25 +17,25 @@ export const loginCandidate = async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // Generate a JWT token with a 30-minute expiration time
+        // Generate a JWT token 
         const token = jwt.sign(
             { id: candidate._id, email: candidate.email },
             process.env.JWT_SECRET, 
             { expiresIn: '30m' } 
         );
 
-        // Update the userType in the database if it is not already set
+        // Update the userType 
         if (!candidate.userType) {
-            candidate.userType = 'candidate'; // Set the user type to candidate
-            await candidate.save(); // Save the updated candidate
+            candidate.userType = 'candidate'; 
+            await candidate.save();
         }
 
-        // Send response with the welcome message, user ID, and token
+        // Send response 
         res.status(200).json({
-            message: `Login Successfull`,  // Welcome message
-            userId: candidate._id,           // User ID
-            token,                            // JWT token
-            userType: candidate.userType      // User type from the database
+            message: `Login Successfull`,  
+            userId: candidate._id,           
+            token,                            
+            userType: candidate.userType    
         });
     } catch (error) {
         console.error(error);

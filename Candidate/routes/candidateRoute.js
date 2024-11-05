@@ -6,7 +6,7 @@ import { authenticateToken } from '../../Middleware/verifyToken.js';
 
 const router = Router();
 
-// Route for sending OTP during signup
+// Route for sending OTP 
 router.post('/signup', sendOtp);
 
 // Route for creating a candidate account after OTP verification

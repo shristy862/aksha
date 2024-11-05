@@ -15,7 +15,7 @@ export const addHiringManager = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(generatedPassword, 10);
 
-        // Create a new hiring manager with the generated email and hashed password
+        // Create a new hiring manager 
         const hiringManager = new HiringManager({ 
             name, 
             email: generatedEmail, 
@@ -25,11 +25,10 @@ export const addHiringManager = async (req, res) => {
         });
         await hiringManager.save();
 
-        // Send the generated email and password to the provided email using Nodemailer
+        // Send the generated email and password to user's given emai
         const subject = 'Your Account Credentials';
         const message = `Hello ${name},\n\nYour account has been created!\n\nHere are your credentials:\nEmail: ${generatedEmail}\nPassword: ${generatedPassword}\n\nPlease keep this information secure.`;
 
-        // Pass subject and text to sendEmail
         await sendEmail(email, subject, message);
 
         res.status(201).json({ 
@@ -38,7 +37,7 @@ export const addHiringManager = async (req, res) => {
                 name,
                 generatedEmail,
                 phone,
-                generatedPassword // Optional to include in response if needed for debugging
+                generatedPassword 
             } 
         });
     } catch (error) {
